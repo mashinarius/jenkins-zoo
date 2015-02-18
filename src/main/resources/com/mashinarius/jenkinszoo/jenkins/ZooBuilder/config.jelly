@@ -5,4 +5,8 @@
     <f:entry title="${%Value}">
       <f:textbox  field="zooValue"/>
     </f:entry>
+   <f:entry title="${%Create Node}" description="Creates all levels of the Node Path">
+      <f:checkbox name="createNode" checked="false"/>
+    </f:entry>
+
 </j:jelly>

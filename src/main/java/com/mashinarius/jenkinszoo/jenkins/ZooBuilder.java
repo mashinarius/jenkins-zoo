@@ -56,7 +56,9 @@ public class ZooBuilder extends Builder
 		// builder
 
         ConnectionUtils example = new ConnectionUtils();
+
         try {
+            example.setConnectionUrl(getDescriptor().getZoo_hostname() + ":" + getDescriptor().getZoo_port());
             example.connect();
 
             if (nodePath.length()>0 && zooValue.length()>0)
@@ -80,15 +82,6 @@ public class ZooBuilder extends Builder
             e.printStackTrace();
             return false;
         }
-/*
-        if (getDescriptor().getUseFrench())
-			listener.getLogger().println("Bonjour, " + name + "!");
-		else
-			listener.getLogger().println("Hello, " + name + "!");
-		Executor.main(new String[]
-		{ "gps-vader.iba", "", "", "" });
-*/
-
 		return true;
 	}
 
@@ -133,6 +126,9 @@ public class ZooBuilder extends Builder
 		 * If you don't want fields to be persisted, use <tt>transient</tt>.
 		 */
 		private boolean useFrench;
+        private String zoo_hostname;
+        private String zoo_port;
+        private String zoo_node;
 
 		/**
 		 * In order to load the persisted global configuration, you have to call
@@ -185,6 +181,9 @@ public class ZooBuilder extends Builder
 			// To persist global configuration information,
 			// set that to properties and call save().
 			useFrench = formData.getBoolean("useFrench");
+            zoo_hostname = formData.getString("zoo_hostname");
+            zoo_port = formData.getString("zoo_port");
+            zoo_node = formData.getString("zoo_node");
 			// ^Can also use req.bindJSON(this, formData);
 			// (easier when there are many fields; need set* methods for this,
 			// like setUseFrench)
@@ -204,5 +203,19 @@ public class ZooBuilder extends Builder
 		{
 			return useFrench;
 		}
+
+        public String getZoo_hostname()
+        {
+            return zoo_hostname;
+        }
+        public String getZoo_port()
+        {
+            return zoo_port;
+        }
+
+        public String getZoo_node()
+        {
+            return zoo_node;
+        }
 	}
 }

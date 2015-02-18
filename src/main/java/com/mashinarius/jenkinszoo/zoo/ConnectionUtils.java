@@ -6,6 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import com.mashinarius.jenkinszoo.commons.Constants;
 import org.apache.zookeeper.CreateMode;
@@ -79,12 +80,22 @@ public class ConnectionUtils implements Constants
 				}
 			}
 		});
-		connectedSignal.await();
+        connectedSignal.await(SESSION_TIMEOUT*2, TimeUnit.MILLISECONDS);
 		return zk;
 	}
 
+    private String connectionUrl;
+
+    public void setConnectionUrl(String url)
+    {
+        this.connectionUrl = url;
+    }
 	public ZooKeeper connect() throws IOException, InterruptedException
 	{
+        if (this.connectionUrl!=null && this.connectionUrl.length()>0)
+        {
+              return connect(this.connectionUrl, Constants.SESSION_TIMEOUT);
+        }
 		return connect(Constants.CONNECTION, Constants.SESSION_TIMEOUT);
 	}
 
