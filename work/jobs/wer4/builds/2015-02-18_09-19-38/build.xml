@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<build>
+  <actions>
+    <hudson.model.CauseAction>
+      <causes>
+        <hudson.model.Cause_-UserIdCause/>
+      </causes>
+    </hudson.model.CauseAction>
+  </actions>
+  <number>2</number>
+  <startTime>1424267378686</startTime>
+  <result>SUCCESS</result>
+  <duration>209</duration>
+  <charset>windows-1252</charset>
+  <keepLog>false</keepLog>
+  <builtOn></builtOn>
+  <workspace>d:\java\workspaces\m3\jenkinsplugin\jenkins-zoo\work\jobs\wer4\workspace</workspace>
+  <hudsonVersion>1.532.3</hudsonVersion>
+  <scm class="hudson.scm.NullChangeLogParser"/>
+  <culprits class="com.google.common.collect.EmptyImmutableSortedSet"/>
+</build>

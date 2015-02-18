@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<com.mashinarius.jenkinszoo.jenkins.ZooBuilder_-DescriptorImpl plugin="jenkins-zoo@1.0-SNAPSHOT">
+  <useFrench>false</useFrench>
+</com.mashinarius.jenkinszoo.jenkins.ZooBuilder_-DescriptorImpl>

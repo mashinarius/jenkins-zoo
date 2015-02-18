@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Group-Id: com.mashinarius.zoo
+Short-Name: jenkins-zoo
+Long-Name: jenkins-zoo
+Url: http://jenkins-ci.org/plugin/jenkins-zoo/
+Plugin-Version: 1.0-SNAPSHOT (private-02/18/2015 11:59-Hrytskevich)
+Hudson-Version: 1.532.3
+Jenkins-Version: 1.532.3
+Plugin-Dependencies: ui-samples-plugin:1.532.3
+Plugin-Developers: 
+Libraries: D:\java\workspaces\m3\jenkinsplugin\jenkins-zoo\target\clas
+ ses,C:\Users\hrytskevich.IBA\.m2\repository\log4j\log4j\1.2.16\log4j-
+ 1.2.16.jar,C:\Users\hrytskevich.IBA\.m2\repository\org\apache\zookeep
+ er\zookeeper\3.5.0-alpha\zookeeper-3.5.0-alpha.jar,C:\Users\hrytskevi
+ ch.IBA\.m2\repository\net\java\dev\javacc\javacc\5.0\javacc-5.0.jar,C
+ :\Users\hrytskevich.IBA\.m2\repository\io\netty\netty\3.7.0.Final\net
+ ty-3.7.0.Final.jar,C:\Users\hrytskevich.IBA\.m2\repository\org\slf4j\
+ slf4j-log4j12\1.7.5\slf4j-log4j12-1.7.5.jar,C:\Users\hrytskevich.IBA\
+ .m2\repository\commons-cli\commons-cli\1.2\commons-cli-1.2.jar,C:\Use
+ rs\hrytskevich.IBA\.m2\repository\org\slf4j\slf4j-api\1.7.5\slf4j-api
+ -1.7.5.jar
+Resource-Path: D:\java\workspaces\m3\jenkinsplugin\jenkins-zoo\src\mai
+ n\webapp
+
