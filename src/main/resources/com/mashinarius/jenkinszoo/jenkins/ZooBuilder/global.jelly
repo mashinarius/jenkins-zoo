@@ -1,0 +1,44 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <!--
+    This Jelly script is used to produce the global configuration option.
+
+    Jenkins uses a set of tag libraries to provide uniformity in forms.
+    To determine where this tag is defined, first check the namespace URI,
+    and then look under $JENKINS/views/. For example, <f:section> is defined
+    in $JENKINS/views/lib/form/section.jelly.
+
+    It's also often useful to just check other similar scripts to see what
+    tags they use. Views are always organized according to its owner class,
+    so it should be straightforward to find them.
+  -->
+  <f:section title="ZooKeeper Publisher">
+    <f:entry title="French" field="useFrench"
+      description="Test Zoo in French">
+      <f:checkbox />
+    </f:entry>
+    <f:entry title="Hostname">
+      <f:textbox field="zoo_hostname"/>
+    </f:entry>
+    <f:entry title="Port">
+      <f:textbox field="zoo_port" value="2181"/>
+    </f:entry>
+    <f:entry title="Default node">
+      <f:textbox field="zoo_node" value="/zk_jenkins"/>
+    </f:entry>
+    <f:entry title="Session timeout">
+        <f:textbox  field="zoo_timeout" value="3000"/>
+    </f:entry>
+    <f:entry title="Encoding">
+      <f:textbox  field="zoo_encoding" value="UTF8"/>
+    </f:entry>
+    <f:entry title="Username">
+      <f:textbox field="zoo_username"/>
+    </f:entry>
+    <f:entry title="Password" >
+      <f:password field="zoo_password"/>
+    </f:entry>
+    <f:validateButton
+    title="${%Test Connection}" progress="${%Testing...}"
+    method="testZooConnection" with="zoo_hostname,zoo_port,zoo_username,zoo_password" />
+  </f:section>
+</j:jelly>
