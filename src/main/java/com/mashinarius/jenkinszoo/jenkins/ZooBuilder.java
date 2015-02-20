@@ -4,18 +4,19 @@ import com.mashinarius.jenkinszoo.commons.Constants;
 import com.mashinarius.jenkinszoo.zoo.ConnectionUtils;
 import hudson.Extension;
 import hudson.Launcher;
-import hudson.model.BuildListener;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import hudson.util.FormValidation;
-import java.io.IOException;
-import javax.servlet.ServletException;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
+
+import javax.servlet.ServletException;
+import java.io.IOException;
 
 public class ZooBuilder extends Builder
 {
@@ -30,9 +31,6 @@ public class ZooBuilder extends Builder
         this.zooValue = zooValue;
 	}
 
-	/**
-	 * We'll use this from the <tt>config.jelly</tt>.
-	 */
 	public String getNodePath()
 	{
 		return nodePath;
@@ -43,34 +41,35 @@ public class ZooBuilder extends Builder
         return zooValue;
     }
 
-    /*@Extension
-    public static final DescriptorImpl DESCRIPTOR = new DescriptorImpl();*/
+
+    /**
+     * This is where you 'build' the project.
+     * @param build
+     * @param launcher
+     * @param listener
+     * @return
+     */
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener)
 	{
-		// This is where you 'build' the project.
-		// Since this is a dummy, we just say 'hello world' and call that a
-		// build.
-
-		// This also shows how you can consult the global configuration of the
-		// builder
-
-        ConnectionUtils example = new ConnectionUtils();
+        ConnectionUtils example;
 
         try {
-            example.setConnectionUrl(getDescriptor().getZoo_hostname() + ":" + getDescriptor().getZoo_port());
+            example= new ConnectionUtils(getDescriptor().getZooHostname(),getDescriptor().getZooPort(),getDescriptor().getZooTimeout());
             example.connect();
 
             if (nodePath.length()>0 && zooValue.length()>0)
             {
                 example.setStringData(nodePath,zooValue);
-                System.out.println(example.getStringData(nodePath));
-                listener.getLogger().println(example.getStringData(nodePath));
+                String result = example.getStringData(nodePath);
+                System.out.println(result);
+                listener.getLogger().println(result);
             }
             else
             {
-                System.out.println(example.getStringData(Constants.SDB_TEST1_DATABASE));
-                listener.getLogger().println(example.getStringData(Constants.SDB_TEST1_DATABASE));
+                String result = example.getStringData(Constants.SDB_TEST1_DATABASE);
+                System.out.println(result);
+                listener.getLogger().println(result);
             }
 
             example.disconnect();
@@ -94,15 +93,7 @@ public class ZooBuilder extends Builder
 		return (DescriptorImpl) super.getDescriptor();
 	}
 
-	public FormValidation doTestZooConnection(@QueryParameter("zoo_hostname") final String hostname, @QueryParameter("zoo_port") final Integer port,
-			@QueryParameter("zoo_username") final String username, @QueryParameter("zoo_password") final String password) throws IOException, ServletException
-	{
-		String connectString = hostname + ":" + port;
-        if (ConnectionUtils.testConnection(connectString))
-		    return FormValidation.ok("Success ");
-        else
-            return FormValidation.error("Connection error");
-	}
+
 
 	/**
 	 * Descriptor for {@link ZooBuilder}. Used as a singleton. The class is
@@ -125,11 +116,37 @@ public class ZooBuilder extends Builder
 		 * <p/>
 		 * If you don't want fields to be persisted, use <tt>transient</tt>.
 		 */
-		private boolean useFrench;
-        private String zoo_hostname;
-        private String zoo_port;
-        private String zoo_node;
-
+        private String zooHostname;
+        private Integer zooPort;
+        private String zooNode;
+        private Integer zooTimeout;
+        private String zooUsername;
+        private String zooPassword;
+        /**
+         *  Test Connections to the ZooKeeper server from the Global config page
+         * @param hostname
+         * @param port
+         * @param timeout
+         * @param username
+         * @param password
+         * @return
+         * @throws IOException
+         * @throws ServletException
+         */
+        public FormValidation doTestConnection(
+                @QueryParameter("zooHostname") final String hostname,
+                @QueryParameter("zooPort") final Integer port,
+                @QueryParameter("zooTimeout") final Integer timeout,
+                @QueryParameter("zooNode") final String node,
+                @QueryParameter("zooUsername") final String username,
+                @QueryParameter("zooPassword") final String password) throws IOException, ServletException
+        {
+            String connectString = hostname + ":" + port;
+            if (ConnectionUtils.testConnection(hostname, port, timeout))
+                return FormValidation.ok("Success ");
+            else
+                return FormValidation.error("Connection error");
+        }
 		/**
 		 * In order to load the persisted global configuration, you have to call
 		 * load() in the constructor.
@@ -141,7 +158,7 @@ public class ZooBuilder extends Builder
 
 		/**
 		 * Performs on-the-fly validation of the form field 'name'.
-		 * 
+		 *
 		 * @param value
 		 *            This parameter receives the value that the user has typed.
 		 * @return Indicates the outcome of the validation. This is sent to the
@@ -180,14 +197,17 @@ public class ZooBuilder extends Builder
 		{
 			// To persist global configuration information,
 			// set that to properties and call save().
-			useFrench = formData.getBoolean("useFrench");
-            zoo_hostname = formData.getString("zoo_hostname");
-            zoo_port = formData.getString("zoo_port");
-            zoo_node = formData.getString("zoo_node");
+            zooHostname = formData.getString("zooHostname");
+            zooPort = formData.getInt("zooPort");
+            zooTimeout = formData.getInt("zooTimeout");
+            zooNode = formData.getString("zooNode");
+            zooUsername = formData.getString("zooUsername");
+            zooPassword = formData.getString("zooPassword");
 			// ^Can also use req.bindJSON(this, formData);
 			// (easier when there are many fields; need set* methods for this,
 			// like setUseFrench)
-			save();
+
+            save();
 			return super.configure(req, formData);
 		}
 
@@ -199,23 +219,32 @@ public class ZooBuilder extends Builder
 		 * to determine the initial state of the checkbox by the naming
 		 * convention.
 		 */
-		public boolean getUseFrench()
-		{
-			return useFrench;
-		}
-
-        public String getZoo_hostname()
+        public String getZooHostname()
         {
-            return zoo_hostname;
+            return zooHostname;
         }
-        public String getZoo_port()
+        public Integer getZooPort()
         {
-            return zoo_port;
+            return zooPort;
         }
 
-        public String getZoo_node()
+        public String getZooNode()
         {
-            return zoo_node;
+            return zooNode;
         }
+
+        public Integer getZooTimeout()
+        {
+            return zooTimeout;
+        }
+
+        public String getZooUsername() {
+            return zooUsername;
+        }
+        public String getZooPassword() {
+            return zooPassword;
+        }
+
+
 	}
 }

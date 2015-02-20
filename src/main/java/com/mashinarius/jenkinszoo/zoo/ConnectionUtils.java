@@ -1,6 +1,12 @@
 package com.mashinarius.jenkinszoo.zoo;
 
+import com.mashinarius.jenkinszoo.commons.Constants;
+import org.apache.zookeeper.*;
+import org.apache.zookeeper.ZooKeeper.States;
+import org.apache.zookeeper.data.Stat;
+
 import java.io.IOException;
+import java.net.ConnectException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -8,179 +14,155 @@ import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.mashinarius.jenkinszoo.commons.Constants;
-import org.apache.zookeeper.CreateMode;
-import org.apache.zookeeper.KeeperException;
-import org.apache.zookeeper.WatchedEvent;
-import org.apache.zookeeper.Watcher;
-import org.apache.zookeeper.ZooDefs;
-import org.apache.zookeeper.ZooKeeper;
-import org.apache.zookeeper.ZooKeeper.States;
-import org.apache.zookeeper.data.Stat;
+public class ConnectionUtils implements Constants {
+    private static ZooKeeper zk;
+    /*private String host;
+    private Integer port;*/
 
-public class ConnectionUtils implements Constants
-{
-	private static ZooKeeper zk;
+    private String connectionString;
+    private Integer timeout;
+    private ConnectionUtils () {}
 
-    public static boolean testConnection(String connectionString)
+    public ConnectionUtils (String hosts)
     {
+        if (hosts.contains(":"))
+        {
+            this.connectionString = hosts;
+        }
+        else
+        {
+            this.connectionString = hosts + ":" + Constants.PORT;
+        }
+        this.timeout = Constants.SESSION_TIMEOUT;
+    }
+    public ConnectionUtils (String hosts, Integer port)
+    {
+        this.connectionString = hosts + ":" + port;
+        this.timeout = Constants.SESSION_TIMEOUT;
+    }
+    public ConnectionUtils (String hosts, Integer port, Integer timeout)
+    {
+        this.connectionString = hosts + ":" + port;
+        this.timeout = timeout;
+    }
+
+    public static boolean testConnection(String host, Integer port, Integer timeout) {
         try {
-            zk = connect(connectionString, SESSION_TIMEOUT);
+            zk = new ConnectionUtils(host, port, timeout).connect();
+            int i = 3;
+            while (i > 0 && zk != null && (ZooKeeper.States.CONNECTING == zk.getState() || States.CONNECTED == zk.getState()))
+            {
+                if (zk.getState().equals(States.CONNECTED)) {
+                    return true;
+                }
+                Thread.sleep(20);
+                i--;
+
+            }
+            zk.close();
+        } catch (ConnectException e ) {
+            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        while (zk !=null && ZooKeeper.States.CONNECTING == zk.getState())
-        {
-            try
-            {
-                if (zk.getState().equals(States.CONNECTED))
-                {
-                    return true;
-                }
-                Thread.sleep(20);
-            } catch (InterruptedException e)
-            {
-            }
-        }
-        try {
-            zk.close();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
         return false;
     }
 
-	private ZooKeeper getZK() throws IOException, InterruptedException
-	{
-		if (zk != null && zk.getState().equals(States.CONNECTED))
-		{
-			return zk;
-		} else
-		{
-			return connect();
-		}
-	}
-
-	private static ZooKeeper connect(String hosts, int sessionTimeout) throws IOException, InterruptedException
-	{
-
-		final CountDownLatch connectedSignal = new CountDownLatch(1);
-		zk = new ZooKeeper(hosts, sessionTimeout, new Watcher()
-		{
-			//@Override
-			public void process(WatchedEvent event)
-			{
-				if (event.getState() == Event.KeeperState.SyncConnected)
-				{
-					connectedSignal.countDown();
-				}
-			}
-		});
-        connectedSignal.await(SESSION_TIMEOUT*2, TimeUnit.MILLISECONDS);
-		return zk;
-	}
-
-    private String connectionUrl;
-
-    public void setConnectionUrl(String url)
-    {
-        this.connectionUrl = url;
-    }
-	public ZooKeeper connect() throws IOException, InterruptedException
-	{
-        if (this.connectionUrl!=null && this.connectionUrl.length()>0)
-        {
-              return connect(this.connectionUrl, Constants.SESSION_TIMEOUT);
+    private ZooKeeper getZooKeeperInstance() throws IOException, InterruptedException {
+        if (zk != null && zk.getState().equals(States.CONNECTED)) {
+            return zk;
+        } else {
+            return connect();
         }
-		return connect(Constants.CONNECTION, Constants.SESSION_TIMEOUT);
-	}
+    }
+    public ZooKeeper connect() throws IOException, InterruptedException {
+        final CountDownLatch connectedSignal = new CountDownLatch(1);
 
-	public void createNode(Object value, String nodePath)
-	{
+        //TODO Tests
+/*        if (this.host.contains(":") && this.host.contains(",")) // multiple server configuration
+        {
+            connectionString = new String(this.host);
+        }
+        else
+        {
+            connectionString = new String(this.host+":"+this.port);
+        }*/
 
-		try
-		{
-			if (getZK().exists(nodePath, false) == null)
-			{
-				System.out.printf("Creating top level znode %s for transaction examples\n", nodePath);
-				getZK().create(nodePath, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
-			}
-		} catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (KeeperException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
+        zk = new ZooKeeper(connectionString, timeout, new Watcher() {
+            //@Override
+            public void process(WatchedEvent event) {
+                if (event.getState() == Event.KeeperState.SyncConnected) {
+                    connectedSignal.countDown();
+                }
+            }
+        });
+        connectedSignal.await(SESSION_TIMEOUT * 2, TimeUnit.MILLISECONDS);
+        return zk;
+    }
 
-	public void setStringData(String nodePath, String value)
-	{
-		try
-		{
-			Stat stat = new Stat();
+    public void createNode(String nodePath) {
 
-			if (null != getZK().getData(nodePath, false, stat))
-			{
-				System.out.println("Path allready exist ; " + new String(getZK().getData(nodePath, false, stat)));
-			}
+        try {
+            if (getZooKeeperInstance().exists(nodePath, false) == null) {
+                System.out.printf("Creating top level znode %s for transaction examples\n", nodePath);
+                getZooKeeperInstance().create(nodePath, null, ZooDefs.Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
+                getZooKeeperInstance().close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        }
+    }
 
-			stat = getZK().setData(nodePath, value.getBytes(), stat.getVersion());
+    public void setStringData(String nodePath, String value) {
+        try {
+            Stat stat = new Stat();
 
-			Calendar cal = Calendar.getInstance();
-			cal.setTimeInMillis(stat.getMtime());
+            if (null != getZooKeeperInstance().getData(nodePath, false, stat)) {
+                System.out.println("Path allready exist ; " + new String(getZooKeeperInstance().getData(nodePath, false, stat)));
+            }
 
-			Date date = new Date(stat.getMtime());
-			DateFormat formatter = new SimpleDateFormat("HH:mm:ss:SSS");
-			String dateFormatted = formatter.format(date);
-			System.out.println("Updated : " + dateFormatted);
+            stat = getZooKeeperInstance().setData(nodePath, value.getBytes(), stat.getVersion());
 
-			getZK().close();
+            Calendar cal = Calendar.getInstance();
+            cal.setTimeInMillis(stat.getMtime());
 
-		} catch (IOException e)
-		{
-			e.printStackTrace();
-		} catch (InterruptedException e)
-		{
-			e.printStackTrace();
-		} catch (KeeperException e)
-		{
-			e.printStackTrace();
-		}
-	}
+            Date date = new Date(stat.getMtime());
+            DateFormat formatter = new SimpleDateFormat("HH:mm:ss:SSS");
+            String dateFormatted = formatter.format(date);
+            System.out.println("Updated : " + dateFormatted);
 
-	public String getStringData(String nodePath)
-	{
-		Stat st1 = new Stat();
-		String value = null;
-		try
-		{
-			value = new String(getZK().getData(nodePath, false, st1));
-		} catch (IOException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (KeeperException e)
-		{
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return value;
-	}
+            getZooKeeperInstance().close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getStringData(String nodePath) {
+        Stat st1 = new Stat();
+        String value = null;
+        try {
+            value = new String(getZooKeeperInstance().getData(nodePath, false, st1));
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeeperException e) {
+            e.printStackTrace();
+        }
+        return value;
+    }
+
     public void disconnect() {
         try {
             zk.close();
