@@ -1,4 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <com.mashinarius.jenkinszoo.jenkins.ZooBuilder_-DescriptorImpl plugin="jenkins-zoo@1.0-SNAPSHOT">
-  <useFrench>false</useFrench>
+  <zooHostname>hrytskevich-vv2.iba</zooHostname>
+  <zooPort>2181</zooPort>
+  <zooNode>/zk_jenkins</zooNode>
+  <zooTimeout>3000</zooTimeout>
+  <zooUsername>1</zooUsername>
+  <zooPassword>1</zooPassword>
 </com.mashinarius.jenkinszoo.jenkins.ZooBuilder_-DescriptorImpl>

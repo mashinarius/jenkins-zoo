@@ -52,11 +52,8 @@ public class ZooBuilder extends Builder
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher, BuildListener listener)
 	{
-        ConnectionUtils example;
-
-        try {
-            example= new ConnectionUtils(getDescriptor().getZooHostname(),getDescriptor().getZooPort(),getDescriptor().getZooTimeout());
-            example.connect();
+        ConnectionUtils example = new ConnectionUtils(getDescriptor().getZooHostname(),getDescriptor().getZooPort(),getDescriptor().getZooTimeout());
+            //example.connect();
 
             if (nodePath.length()>0 && zooValue.length()>0)
             {
@@ -72,15 +69,6 @@ public class ZooBuilder extends Builder
                 listener.getLogger().println(result);
             }
 
-            example.disconnect();
-        } catch (IOException e) {
-
-            e.printStackTrace();
-            return false;
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-            return false;
-        }
 		return true;
 	}
 
@@ -244,7 +232,5 @@ public class ZooBuilder extends Builder
         public String getZooPassword() {
             return zooPassword;
         }
-
-
 	}
 }
