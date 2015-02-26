@@ -4,26 +4,24 @@ import com.mashinarius.jenkinszoo.commons.Constants;
 import org.apache.commons.lang.StringUtils;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.ZooKeeper.States;
-import org.apache.zookeeper.data.ACL;
 import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.ConnectException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ConnectionUtils implements Constants {
+public class ConnectionHelper implements Constants {
     private String connectionString;
     private Integer timeout;
-    private ConnectionUtils () {}
+    private ConnectionHelper() {}
 
-    public ConnectionUtils (String hosts)
+    public ConnectionHelper(String hosts)
     {
         if (hosts.contains(":"))
         {
@@ -35,12 +33,12 @@ public class ConnectionUtils implements Constants {
         }
         this.timeout = Constants.SESSION_TIMEOUT;
     }
-    public ConnectionUtils (String hosts, Integer port)
+    public ConnectionHelper(String hosts, Integer port)
     {
         this.connectionString = hosts + ":" + port;
         this.timeout = Constants.SESSION_TIMEOUT;
     }
-    public ConnectionUtils (String hosts, Integer port, Integer timeout)
+    public ConnectionHelper(String hosts, Integer port, Integer timeout)
     {
         this.connectionString = hosts + ":" + port;
         this.timeout = timeout;
@@ -123,7 +121,7 @@ public class ConnectionUtils implements Constants {
     public static boolean testConnection(String host, Integer port, Integer sessionTimeout) {
         ZooKeeper zk = null;
         try {
-             zk = new ConnectionUtils(host, port, sessionTimeout).connect();
+             zk = new ConnectionHelper(host, port, sessionTimeout).connect();
             for(int i=0; i < 3; i++)
             {
                 if (zk.getState().equals(States.CONNECTED)) {
@@ -204,18 +202,18 @@ public class ConnectionUtils implements Constants {
         }
     }
 
-    public void setStringData(String nodePath, String value) {
+    public void setStringData(String nodePath, String value, boolean createNode, PrintStream printStream) {
         try {
             Stat stat = new Stat();
 
-            if (!checkExist(nodePath))
+            if (!checkExist(nodePath) && createNode)
             {
                 createAllNodes(nodePath);
             }
 
             ZooKeeper zkk = connect();
             if (null != zkk.getData(nodePath, false, stat)) {
-                System.out.println("Path allready exist ; " + new String(zkk.getData(nodePath, false, stat)));
+                printStream.println("Path allready exist ; " + new String(zkk.getData(nodePath, false, stat)));
             }
 
 
@@ -227,7 +225,7 @@ public class ConnectionUtils implements Constants {
             Date date = new Date(stat.getMtime());
             DateFormat formatter = new SimpleDateFormat("HH:mm:ss:SSS");
             String dateFormatted = formatter.format(date);
-            System.out.println("Updated : " + dateFormatted);
+            printStream.println("Updated : " + dateFormatted);
 
             zkk.close();
 
